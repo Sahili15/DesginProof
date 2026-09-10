@@ -1,0 +1,10 @@
+{
+  "name": "designproof-root",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npx -y concurrently \"npm run dev --prefix backend/node_service\" \"npm run dev --prefix frontend\""
+  },
+  "dependencies": {
+    "pg": "^8.20.0"
+  }
+}
