@@ -3,17 +3,28 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASSWORD,
-    {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
+export const sequelize = process.env.DATABASE_URL
+    ? new Sequelize(process.env.DATABASE_URL, {
         dialect: 'postgres',
-        logging: console.log, // Turn on logging to see what's happening
-    }
-);
+        logging: false,
+        dialectOptions: process.env.DATABASE_URL.includes('localhost') ? {} : {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            }
+        }
+    })
+    : new Sequelize(
+        process.env.DB_NAME || 'designproof_db',
+        process.env.DB_USER || 'postgres',
+        process.env.DB_PASSWORD || 'root',
+        {
+            host: process.env.DB_HOST || 'localhost',
+            port: process.env.DB_PORT || 5432,
+            dialect: 'postgres',
+            logging: false,
+        }
+    );
 
 export const connectDB = async () => {
     try {

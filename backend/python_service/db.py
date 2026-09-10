@@ -6,11 +6,14 @@ load_dotenv()
 
 def get_connection():
     try:
+        db_url = os.getenv("DATABASE_URL")
+        if db_url:
+            return psycopg2.connect(db_url)
         return psycopg2.connect(
             host=os.getenv("DB_HOST", "localhost"),
             database=os.getenv("DB_NAME", "designproof_db"),
             user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASSWORD", "Neha@12345"),
+            password=os.getenv("DB_PASSWORD", "root"),
             port=os.getenv("DB_PORT", "5432")
         )
     except psycopg2.Error as e:
