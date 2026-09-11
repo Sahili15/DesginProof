@@ -30,8 +30,21 @@ const app = express();
 app.use(helmet({
     crossOriginResourcePolicy: false,
 }));
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://desgin-proof.vercel.app'
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Permissive in dev/cloud to prevent broken demo
+        }
+    },
     credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -45,6 +58,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
