@@ -633,8 +633,7 @@ def reverify_presence():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    host = os.environ.get('FLASK_HOST', '127.0.0.1')
-    port = int(os.environ.get('FLASK_PORT', 5001))
-    # In production/docker, disable the reloader to prevent duplicate processes
+    host = os.environ.get('FLASK_HOST', '0.0.0.0')
+    port = int(os.environ.get('PORT', os.environ.get('FLASK_PORT', 5001)))
     use_reloader = os.environ.get('FLASK_ENV') == 'development'
-    app.run(debug=True, host=host, port=port, use_reloader=use_reloader)
+    app.run(debug=False, host=host, port=port, use_reloader=use_reloader)
