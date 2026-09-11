@@ -168,6 +168,20 @@ def upload_to_tmpfiles(file_path):
                     return data["data"]["url"].replace("tmpfiles.org/", "tmpfiles.org/dl/")
     except Exception as e:
         safe_print(f"[WARN] Tmpfiles upload failed: {e}")
+def upload_to_uguu(file_path):
+    """Hosts an image on Uguu for direct raw image access by Google Lens/SerpAPI"""
+    try:
+        url = "https://uguu.se/upload.php"
+        with open(file_path, "rb") as f:
+            response = requests.post(url, files={"files[]": (os.path.basename(file_path), f)}, timeout=20)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and data.get("files"):
+                    direct_url = data["files"][0].get("url")
+                    if direct_url:
+                        return direct_url
+    except Exception as e:
+        safe_print(f"[WARN] Uguu upload failed: {e}")
     return None
 
 def upload_to_catbox(file_path):
@@ -246,10 +260,12 @@ def upload_image():
 
         log_debug(f"\n--- NEW DISCOVERY STARTED: {filename} ---")
         
-        # 1. Multi-Provider Hosting
-        public_search_url = upload_to_tmpfiles(filepath) # Use the verified Tmpfiles method
+        # 1. Multi-Provider Hosting: Uguu gives direct raw image URLs needed by Google Lens/SerpAPI
+        public_search_url = upload_to_uguu(filepath)
         if not public_search_url:
             public_search_url = upload_to_catbox(filepath)
+        if not public_search_url:
+            public_search_url = upload_to_tmpfiles(filepath)
         
         # 2. URL-Based Search (Primary for Reverse Image)
         if public_search_url:
