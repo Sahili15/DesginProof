@@ -17,26 +17,58 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.get('/me', protect, getMe);
 
-// Google OAuth Routes
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+// Helper to determine base frontend URL
+const getFrontendUrl = (req) => {
+    let returnTo = process.env.FRONTEND_URL || 'http://localhost:3000';
+    try {
+        if (req.query?.state) {
+            const parsed = JSON.parse(Buffer.from(req.query.state, 'base64').toString('utf8'));
+            if (parsed.returnTo) {
+                returnTo = parsed.returnTo.replace(/\/login.*$/, '');
+            }
+        }
+    } catch (e) {}
+    return returnTo;
+};
 
-router.get('/google/callback', 
-    passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth_failed` }),
-    (req, res) => {
-        const token = generateToken(req.user.id);
-        res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}`);
-    }
-);
+// Google OAuth Routes
+router.get('/google', (req, res, next) => {
+    const returnTo = req.query.returnTo || req.headers.referer || process.env.FRONTEND_URL || 'http://localhost:3000';
+    passport.authenticate('google', {
+        scope: ['profile', 'email'],
+        state: Buffer.from(JSON.stringify({ returnTo })).toString('base64')
+    })(req, res, next);
+});
+
+router.get('/google/callback', (req, res, next) => {
+    const returnTo = getFrontendUrl(req);
+    passport.authenticate('google', { failureRedirect: `${returnTo}/login?error=oauth_failed` }, (err, user) => {
+        if (err || !user) {
+            return res.redirect(`${returnTo}/login?error=oauth_failed`);
+        }
+        const token = generateToken(user.id);
+        return res.redirect(`${returnTo}/login?token=${token}`);
+    })(req, res, next);
+});
 
 // GitHub OAuth Routes
-router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+router.get('/github', (req, res, next) => {
+    const returnTo = req.query.returnTo || req.headers.referer || process.env.FRONTEND_URL || 'http://localhost:3000';
+    passport.authenticate('github', {
+        scope: ['user:email'],
+        state: Buffer.from(JSON.stringify({ returnTo })).toString('base64')
+    })(req, res, next);
+});
 
-router.get('/github/callback', 
-    passport.authenticate('github', { failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth_failed` }),
-    (req, res) => {
-        const token = generateToken(req.user.id);
-        res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}`);
-    }
-);
+router.get('/github/callback', (req, res, next) => {
+    const returnTo = getFrontendUrl(req);
+    passport.authenticate('github', { failureRedirect: `${returnTo}/login?error=oauth_failed` }, (err, user) => {
+        if (err || !user) {
+            return res.redirect(`${returnTo}/login?error=oauth_failed`);
+        }
+        const token = generateToken(user.id);
+        return res.redirect(`${returnTo}/login?token=${token}`);
+    })(req, res, next);
+});
 
 export default router;
