@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://remarks-fighting-series-diabetes.trycloudflare.com',
   timeout: Number(import.meta.env.VITE_API_TIMEOUT || 600000), // 10 minutes timeout
 })
 

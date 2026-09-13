@@ -29,7 +29,7 @@ export default function SocialLoginButtons() {
     
     // Redirect to backend OAuth endpoint
     // Using window.location.href because Passport requires a full page redirect
-    const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+    const backendUrl = import.meta.env.VITE_API_BASE_URL || 'https://remarks-fighting-series-diabetes.trycloudflare.com';
     window.location.href = `${backendUrl}/api/auth/${provider}`;
   };
 
