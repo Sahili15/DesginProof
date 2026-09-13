@@ -278,10 +278,15 @@ def upload_image():
                 if resp.status_code == 200:
                     res = resp.json()
                     if "error" not in res:
-                        pages = res.get("pages_with_matching_images", [])
-                        for p in pages: p['source_priority'] = 'exact_page'
-                        all_api_results.extend(pages)
-                        log_debug(f"[OK] Reverse Image found {len(pages)} matching pages via URL.")
+                        rev_matches = []
+                        for field in ['image_results', 'inline_images', 'pages_with_matching_images', 'visual_matches']:
+                            items = res.get(field, [])
+                            if isinstance(items, list):
+                                for item in items:
+                                    item['source_priority'] = 'exact_page'
+                                    rev_matches.append(item)
+                        all_api_results.extend(rev_matches)
+                        log_debug(f"[OK] Reverse Image found {len(rev_matches)} matches via URL.")
                     else: log_debug(f"[ERR] Reverse URL API Error: {res.get('error')}")
                 else: log_debug(f"[ERR] Reverse URL HTTP Error: {resp.status_code}")
 
@@ -292,9 +297,15 @@ def upload_image():
                 if resp.status_code == 200:
                     res = resp.json()
                     if "error" not in res:
-                        matches = res.get("visual_matches", [])
-                        all_api_results.extend(matches)
-                        log_debug(f"[OK] Google Lens found {len(matches)} visual matches via URL.")
+                        lens_matches = []
+                        for field in ['visual_matches', 'exact_matches', 'knowledge_graph']:
+                            items = res.get(field, [])
+                            if isinstance(items, list):
+                                lens_matches.extend(items)
+                            elif isinstance(items, dict):
+                                lens_matches.append(items)
+                        all_api_results.extend(lens_matches)
+                        log_debug(f"[OK] Google Lens found {len(lens_matches)} matches via URL.")
                     else: log_debug(f"[ERR] Lens URL API Error: {res.get('error')}")
                 else: log_debug(f"[ERR] Lens URL HTTP Error: {resp.status_code}")
             except Exception as e: log_debug(f"[ERR] URL Search Exception: {e}")
